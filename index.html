@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>橋梁点検システム（デモ）</title>
+<title>デモアプリ</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: "Helvetica Neue", Arial, sans-serif; background: #f0f2f5; color: #1a1a2e; font-size: 14px; }
@@ -106,8 +106,8 @@
 <!-- ログイン画面 -->
 <div id="screen-login" class="screen active">
   <div class="login-box">
-    <div class="system-name">Bridge Inspection System</div>
-    <h1>橋梁点検<br>管理システム</h1>
+
+    <h1>デモアプリ</h1>
     <div class="form-group">
       <label>ユーザーID</label>
       <input type="text" id="username" placeholder="例：inspector01" autocomplete="off">
@@ -118,17 +118,14 @@
       <div class="error-msg" id="login-error">IDまたはパスワードが正しくありません</div>
     </div>
     <button class="btn-primary" id="login-btn" onclick="doLogin()">ログイン</button>
-    <div class="demo-hint">
-      デモ用ログイン情報<br>
-      ID：<strong>demo</strong>　パスワード：<strong>1234</strong>
-    </div>
+    
   </div>
 </div>
 
 <!-- 検索画面 -->
 <div id="screen-search" class="screen">
   <div class="topbar">
-    <div class="title">橋梁点検管理システム</div>
+    <div class="title">デモアプリ</div>
     <div class="user-info">
       <span id="logged-user"></span>
       <button class="btn-logout" onclick="doLogout()">ログアウト</button>
@@ -180,7 +177,7 @@
           <div class="info-item"><label>橋梁ID</label><span id="d-bridge-id"></span></div>
           <div class="info-item"><label>橋梁名</label><span id="d-bridge-name"></span></div>
           <div class="info-item"><label>所在地</label><span id="d-location"></span></div>
-          <div class="info-item"><label>架設年度</label><span id="d-year"></span></div>
+          
         </div>
       </div>
     </div>
@@ -271,14 +268,17 @@ function doSearch() {
 }
 
 function renderTable(data) {
-  const cls = { S:"badge-s", A:"badge-a", B:"badge-b", C:"badge-c" };
-  document.getElementById("result-count").textContent = "検索結果：" + data.length + "件";
-  document.getElementById("result-body").innerHTML = data.map(b =>
-    "<tr><td>" + b.id + "</td><td>" + b.name + "</td><td>" + b.location +
-    "</td><td><span class='badge " + cls[b.judgment] + "'>" + b.judgment + "</span></td><td>" +
-    LAST_DATES[b.id] + "</td><td><button class='btn-detail' onclick=\"showDetail('" + b.id + "')\">詳細を開く</button></td></tr>"
-  ).join("");
+
+document.getElementById("result-count").textContent = "検索結果：" + data.length + "件";
+
+document.getElementById("result-body").innerHTML = data.map(b =>
+"<tr><td>" + b.id + "</td><td>" + b.name + "</td><td>" + b.location +
+"</td><td>" + b.judgment + "</td><td>" +
+LAST_DATES[b.id] + "</td><td><button class='btn-detail' onclick=\"showDetail('" + b.id + "')\">詳細を開く</button></td></tr>"
+).join("");
 }
+
+
 
 function showSearch() {
   showScreen("screen-search");
@@ -290,7 +290,6 @@ function showDetail(id) {
   document.getElementById("d-bridge-id").textContent   = currentBridge.id;
   document.getElementById("d-bridge-name").textContent = currentBridge.name;
   document.getElementById("d-location").textContent    = currentBridge.location;
-  document.getElementById("d-year").textContent        = currentBridge.year;
   document.getElementById("inspect-date").value = new Date().toISOString().split("T")[0];
   document.getElementById("damage-rank").value  = "";
   document.getElementById("comment").value      = "";
