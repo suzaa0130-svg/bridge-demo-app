@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>デモアプリ</title>
+<title>Demo App</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: "Helvetica Neue", Arial, sans-serif; background: #f0f2f5; color: #1a1a2e; font-size: 14px; }
@@ -107,7 +107,7 @@
 <div id="screen-login" class="screen active">
   <div class="login-box">
 
-    <h1>デモアプリ</h1>
+    <h1>Demo App</h1>
     <div class="form-group">
       <label>ユーザーID</label>
       <input type="text" id="username" placeholder="例：inspector01" autocomplete="off">
@@ -125,7 +125,7 @@
 <!-- 検索画面 -->
 <div id="screen-search" class="screen">
   <div class="topbar">
-    <div class="title">デモアプリ</div>
+    <div class="title">Demo App</div>
     <div class="user-info">
       <span id="logged-user"></span>
       <button class="btn-logout" onclick="doLogout()">ログアウト</button>
@@ -149,7 +149,7 @@
       <table>
         <thead>
           <tr>
-            <th>橋梁ID</th><th>橋梁名</th><th>所在地</th><th>前回判定</th><th>最終点検日</th><th></th>
+            <th>橋梁ID</th><th>橋梁名</th><th>所在地</th><th>前回のグレード</th><th>最終点検日</th><th></th>
           </tr>
         </thead>
         <tbody id="result-body"></tbody>
@@ -161,7 +161,7 @@
 <!-- 詳細画面 -->
 <div id="screen-detail" class="screen">
   <div class="topbar">
-    <div class="title">橋梁点検管理システム</div>
+    <div class="title">Demo App</div>
     <div class="user-info">
       <span id="logged-user2"></span>
       <button class="btn-logout" onclick="doLogout()">ログアウト</button>
@@ -190,13 +190,13 @@
             <input type="date" id="inspect-date">
           </div>
           <div class="form-group">
-            <label>健全性判定</label>
+            <label>グレード</label>
             <select id="damage-rank">
               <option value="">選択してください</option>
-              <option value="S">S：健全</option>
-              <option value="A">A：予防保全段階</option>
-              <option value="B">B：早期措置段階</option>
-              <option value="C">C：緊急措置段階</option>
+              <option value="S">S</option>
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
             </select>
           </div>
           <div class="form-group span-2">
@@ -308,7 +308,7 @@ function addPhoto() {
 
 async function doSave() {
   if (!document.getElementById("damage-rank").value) { 
-    showToast("健全性判定を選択してください", "#c62828"); 
+    showToast("グレードを選択してください", "#c62828"); 
     return; 
   }
   if (!document.getElementById("comment").value.trim()) { 
