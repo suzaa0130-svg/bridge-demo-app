@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>橋梁点検システム（デモ）</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Helvetica Neue", Arial, sans-serif; background: #f0f2f5; color: #1a1a2e; font-size: 14px; }
+
+  /* 画面切替 */
+  .screen { display: none; min-height: 100vh; }
+  .screen.active { display: block; }
+  #screen-login.active { display: flex; }
+
+  /* ログイン */
+  #screen-login {
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+  }
+  .login-box {
+    background: #fff;
+    border-radius: 8px;
+    padding: 48px 40px;
+    width: 360px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  }
+  .login-box .system-name { font-size: 11px; letter-spacing: 2px; color: #888; margin-bottom: 6px; }
+  .login-box h1 { font-size: 22px; font-weight: 700; margin-bottom: 32px; line-height: 1.3; }
+  .demo-hint { margin-top: 16px; padding: 10px 12px; background: #f0f4ff; border-left: 3px solid #0f3460; border-radius: 3px; font-size: 12px; color: #555; line-height: 1.6; }
+
+  /* フォーム共通 */
+  .form-group { margin-bottom: 18px; }
+  .form-group label { display: block; font-size: 12px; font-weight: 600; color: #555; margin-bottom: 6px; }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 10px 12px; border: 1.5px solid #ddd; border-radius: 5px; font-size: 14px; background: #fff; font-family: inherit;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #0f3460; }
+  .form-group textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+  .error-msg { color: #c62828; font-size: 12px; margin-top: 4px; display: none; }
+
+  /* ボタン */
+  .btn-primary { width: 100%; padding: 12px; background: #0f3460; color: #fff; border: none; border-radius: 5px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .btn-primary:hover { background: #16213e; }
+  .btn-search { padding: 10px 24px; background: #0f3460; color: #fff; border: none; border-radius: 5px; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .btn-search:hover { background: #16213e; }
+  .btn-detail { padding: 5px 14px; background: #fff; border: 1.5px solid #0f3460; color: #0f3460; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer; }
+  .btn-detail:hover { background: #0f3460; color: #fff; }
+  .btn-cancel { padding: 10px 24px; background: #fff; border: 1.5px solid #ccc; color: #555; border-radius: 5px; font-size: 14px; cursor: pointer; }
+  .btn-save { padding: 10px 32px; background: #0f3460; color: #fff; border: none; border-radius: 5px; font-size: 14px; font-weight: 700; cursor: pointer; }
+  .btn-save:hover { background: #16213e; }
+  .btn-logout { background: transparent; border: 1px solid #555; color: #ccc; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+  .btn-logout:hover { border-color: #aaa; color: #fff; }
+
+  /* トップバー */
+  .topbar { background: #1a1a2e; color: #fff; padding: 0 24px; height: 52px; display: flex; align-items: center; justify-content: space-between; }
+  .topbar .title { font-size: 15px; font-weight: 700; letter-spacing: 1px; }
+  .topbar .user-info { font-size: 12px; color: #aaa; display: flex; align-items: center; gap: 16px; }
+
+  /* コンテナ */
+  .container { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
+  .page-title { font-size: 18px; font-weight: 700; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 2px solid #e0e0e0; }
+
+  /* 検索 */
+  .search-box { background: #fff; border-radius: 8px; padding: 24px; margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; gap: 12px; align-items: flex-end; }
+  .search-box .form-group { margin-bottom: 0; flex: 1; }
+
+  /* テーブル */
+  .result-table-wrap { background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); overflow: hidden; }
+  .result-table-title { padding: 14px 20px; font-size: 13px; font-weight: 600; color: #555; border-bottom: 1px solid #eee; background: #fafafa; }
+  table { width: 100%; border-collapse: collapse; }
+  th { background: #f5f6fa; padding: 10px 16px; text-align: left; font-size: 12px; font-weight: 700; color: #666; border-bottom: 1px solid #eee; }
+  td { padding: 12px 16px; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f7f9ff; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: 700; }
+  .badge-a { background: #e8f5e9; color: #2e7d32; }
+  .badge-b { background: #fff8e1; color: #f57f17; }
+  .badge-c { background: #fce4ec; color: #c62828; }
+  .badge-s { background: #e3f2fd; color: #1565c0; }
+
+  /* 詳細 */
+  .back-link { display: inline-flex; align-items: center; gap: 6px; color: #0f3460; font-size: 13px; font-weight: 600; cursor: pointer; margin-bottom: 20px; }
+  .back-link:hover { text-decoration: underline; }
+  .detail-card { background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 20px; overflow: hidden; }
+  .card-header { padding: 14px 20px; background: #1a1a2e; color: #fff; font-size: 13px; font-weight: 700; }
+  .card-body { padding: 20px; }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .info-item label { display: block; font-size: 11px; font-weight: 700; color: #888; margin-bottom: 4px; }
+  .info-item span { font-size: 14px; font-weight: 500; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .span-2 { grid-column: span 2; }
+  .photo-area { border: 2px dashed #ccc; border-radius: 6px; padding: 20px; text-align: center; color: #aaa; font-size: 13px; cursor: pointer; }
+  .photo-area:hover { border-color: #0f3460; color: #0f3460; }
+  .photo-preview { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+  .photo-thumb { width: 80px; height: 60px; background: #e8eaf0; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #888; border: 1px solid #ddd; }
+  .action-bar { display: flex; gap: 12px; justify-content: flex-end; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+
+  /* トースト */
+  #toast { display: none; position: fixed; bottom: 32px; right: 32px; color: #fff; padding: 14px 24px; border-radius: 6px; font-size: 14px; font-weight: 600; box-shadow: 0 4px 16px rgba(0,0,0,0.2); z-index: 9999; }
+</style>
+</head>
+<body>
+
+<!-- ログイン画面 -->
+<div id="screen-login" class="screen active">
+  <div class="login-box">
+    <div class="system-name">Bridge Inspection System</div>
+    <h1>橋梁点検<br>管理システム</h1>
+    <div class="form-group">
+      <label>ユーザーID</label>
+      <input type="text" id="username" placeholder="例：inspector01" autocomplete="off">
+    </div>
+    <div class="form-group">
+      <label>パスワード</label>
+      <input type="password" id="password" placeholder="••••••••">
+      <div class="error-msg" id="login-error">IDまたはパスワードが正しくありません</div>
+    </div>
+    <button class="btn-primary" id="login-btn" onclick="doLogin()">ログイン</button>
+    <div class="demo-hint">
+      デモ用ログイン情報<br>
+      ID：<strong>demo</strong>　パスワード：<strong>1234</strong>
+    </div>
+  </div>
+</div>
+
+<!-- 検索画面 -->
+<div id="screen-search" class="screen">
+  <div class="topbar">
+    <div class="title">橋梁点検管理システム</div>
+    <div class="user-info">
+      <span id="logged-user"></span>
+      <button class="btn-logout" onclick="doLogout()">ログアウト</button>
+    </div>
+  </div>
+  <div class="container">
+    <div class="page-title">橋梁検索</div>
+    <div class="search-box">
+      <div class="form-group">
+        <label>橋梁ID</label>
+        <input type="text" id="search-bridge-id" placeholder="例：B001">
+      </div>
+      <div class="form-group">
+        <label>橋梁名</label>
+        <input type="text" id="search-bridge-name" placeholder="例：○○橋">
+      </div>
+      <button class="btn-search" id="search-btn" onclick="doSearch()">検索</button>
+    </div>
+    <div class="result-table-wrap">
+      <div class="result-table-title" id="result-count">検索結果：5件</div>
+      <table>
+        <thead>
+          <tr>
+            <th>橋梁ID</th><th>橋梁名</th><th>所在地</th><th>前回判定</th><th>最終点検日</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="result-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- 詳細画面 -->
+<div id="screen-detail" class="screen">
+  <div class="topbar">
+    <div class="title">橋梁点検管理システム</div>
+    <div class="user-info">
+      <span id="logged-user2"></span>
+      <button class="btn-logout" onclick="doLogout()">ログアウト</button>
+    </div>
+  </div>
+  <div class="container">
+    <a class="back-link" onclick="showSearch()">← 検索結果へ戻る</a>
+    <div class="page-title">点検結果入力</div>
+    <div class="detail-card">
+      <div class="card-header">橋梁基本情報</div>
+      <div class="card-body">
+        <div class="info-grid">
+          <div class="info-item"><label>橋梁ID</label><span id="d-bridge-id"></span></div>
+          <div class="info-item"><label>橋梁名</label><span id="d-bridge-name"></span></div>
+          <div class="info-item"><label>所在地</label><span id="d-location"></span></div>
+          <div class="info-item"><label>架設年度</label><span id="d-year"></span></div>
+        </div>
+      </div>
+    </div>
+    <div class="detail-card">
+      <div class="card-header">点検結果入力</div>
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>点検日</label>
+            <input type="date" id="inspect-date">
+          </div>
+          <div class="form-group">
+            <label>健全性判定</label>
+            <select id="damage-rank">
+              <option value="">選択してください</option>
+              <option value="S">S：健全</option>
+              <option value="A">A：予防保全段階</option>
+              <option value="B">B：早期措置段階</option>
+              <option value="C">C：緊急措置段階</option>
+            </select>
+          </div>
+          <div class="form-group span-2">
+            <label>所見・特記事項</label>
+            <textarea id="comment" rows="4" placeholder="損傷状況、措置の要否などを記入してください"></textarea>
+          </div>
+          <div class="form-group span-2">
+            <label>写真添付</label>
+            <div class="photo-area" onclick="addPhoto()">クリックして写真を選択（複数可）</div>
+            <div class="photo-preview" id="photo-preview"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="action-bar">
+      <button class="btn-cancel" onclick="showSearch()">キャンセル</button>
+      <button class="btn-save" id="save-btn" onclick="doSave()">保存する</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+const BRIDGES = [
+  { id:"B001", name:"中央橋",    location:"○○市中央区", year:"1985年度", judgment:"A" },
+  { id:"B002", name:"北大橋",    location:"○○市北区",   year:"1992年度", judgment:"B" },
+  { id:"B003", name:"南川橋",    location:"○○市南区",   year:"1978年度", judgment:"C" },
+  { id:"B004", name:"東部高架橋", location:"○○市東区",  year:"2001年度", judgment:"S" },
+  { id:"B005", name:"西山橋",    location:"○○市西区",   year:"1969年度", judgment:"B" },
+];
+const LAST_DATES = { B001:"2023-06-15", B002:"2023-07-22", B003:"2023-05-10", B004:"2024-01-08", B005:"2022-11-30" };
+let currentBridge = null;
+
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(s => s.style.display = "none");
+  const el = document.getElementById(id);
+  el.style.display = (id === "screen-login") ? "flex" : "block";
+}
+
+function doLogin() {
+  const id = document.getElementById("username").value.trim();
+  const pw = document.getElementById("password").value;
+  if (id === "demo" && pw === "1234") {
+    document.getElementById("login-error").style.display = "none";
+    document.getElementById("logged-user").textContent  = id + " さん";
+    document.getElementById("logged-user2").textContent = id + " さん";
+    showScreen("screen-search");
+    renderTable(BRIDGES);
+  } else {
+    document.getElementById("login-error").style.display = "block";
+  }
+}
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Enter" && document.getElementById("screen-login").style.display !== "none") doLogin();
+});
+
+function doLogout() {
+  document.getElementById("username").value = "";
+  document.getElementById("password").value = "";
+  showScreen("screen-login");
+}
+
+function doSearch() {
+  const bid  = document.getElementById("search-bridge-id").value.trim().toUpperCase();
+  const name = document.getElementById("search-bridge-name").value.trim();
+  renderTable(BRIDGES.filter(b => (!bid || b.id.includes(bid)) && (!name || b.name.includes(name))));
+}
+
+function renderTable(data) {
+  const cls = { S:"badge-s", A:"badge-a", B:"badge-b", C:"badge-c" };
+  document.getElementById("result-count").textContent = "検索結果：" + data.length + "件";
+  document.getElementById("result-body").innerHTML = data.map(b =>
+    "<tr><td>" + b.id + "</td><td>" + b.name + "</td><td>" + b.location +
+    "</td><td><span class='badge " + cls[b.judgment] + "'>" + b.judgment + "</span></td><td>" +
+    LAST_DATES[b.id] + "</td><td><button class='btn-detail' onclick=\"showDetail('" + b.id + "')\">詳細を開く</button></td></tr>"
+  ).join("");
+}
+
+function showSearch() {
+  showScreen("screen-search");
+  renderTable(BRIDGES);
+}
+
+function showDetail(id) {
+  currentBridge = BRIDGES.find(b => b.id === id);
+  document.getElementById("d-bridge-id").textContent   = currentBridge.id;
+  document.getElementById("d-bridge-name").textContent = currentBridge.name;
+  document.getElementById("d-location").textContent    = currentBridge.location;
+  document.getElementById("d-year").textContent        = currentBridge.year;
+  document.getElementById("inspect-date").value = new Date().toISOString().split("T")[0];
+  document.getElementById("damage-rank").value  = "";
+  document.getElementById("comment").value      = "";
+  document.getElementById("photo-preview").innerHTML = "";
+  showScreen("screen-detail");
+}
+
+function addPhoto() {
+  const preview = document.getElementById("photo-preview");
+  if (preview.children.length >= 4) { showToast("写真は最大4枚です", "#c62828"); return; }
+  const div = document.createElement("div");
+  div.className = "photo-thumb";
+  div.textContent = "写真" + (preview.children.length + 1) + ".jpg";
+  preview.appendChild(div);
+}
+
+async function doSave() {
+  if (!document.getElementById("damage-rank").value) { 
+    showToast("健全性判定を選択してください", "#c62828"); 
+    return; 
+  }
+  if (!document.getElementById("comment").value.trim()) { 
+    showToast("所見を入力してください", "#c62828"); 
+    return; 
+  }
+
+  const payload = {
+    bridge_id:    currentBridge.id,
+    bridge_name:  currentBridge.name,
+    location:     currentBridge.location,
+    inspect_date: document.getElementById("inspect-date").value,
+    damage_rank:  document.getElementById("damage-rank").value,
+    comment:      document.getElementById("comment").value.trim(),
+  };
+
+  try {
+    const res = await fetch("https://bridge-demo-server.onrender.com/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      showToast(currentBridge.id + "：" + currentBridge.name + " を保存しました ✓", "#2e7d32");
+      setTimeout(showSearch, 1800);
+    } else {
+      showToast("保存失敗", "#c62828");
+    }
+  } catch(e) {
+    showToast("サーバーに接続できません", "#c62828");
+  }
+}
+
+
+function showToast(msg, color) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.style.cssText = "display:block;position:fixed;bottom:32px;right:32px;padding:14px 24px;border-radius:6px;font-size:14px;font-weight:600;z-index:9999;color:#fff;background:" + color;
+  setTimeout(() => { t.style.display = "none"; }, 2000);
+}
+
+// 初期表示
+showScreen("screen-login");
+</script>
+</body>
+</html>
+
